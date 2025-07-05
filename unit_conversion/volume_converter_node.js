@@ -1,5 +1,5 @@
 // Metadata
-// Author: Your Name
+// Author: https://github.com/johnpeterman72
 // Version: 1.0
 // Description: A node that converts imperial volume units (fl oz, gal) to metric (L).
 // Created: July 04, 2025, 12:48 PM CST
