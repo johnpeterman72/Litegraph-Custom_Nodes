@@ -1,27 +1,32 @@
 // Metadata
 // Author: https://github.com/johnpeterman72
-// Version: 1.0
+// Version: 1.1 - Fixed combo widget and sizing issues
 // Description: A node that converts temperature between Celsius, Fahrenheit, and Kelvin scales and displays the conversion equations.
 // Created: July 04, 2025, 12:43 PM CST
+// Fixed: January 7, 2025
 
 function TemperatureConverterNode() {
     this.addInput("Temperature", "number");
     this.addOutput("Celsius", "number");
     this.addOutput("Fahrenheit", "number");
     this.addOutput("Kelvin", "number");
+    
     this.properties = {
         padding: 10,
-        inputUnit: "Celsius", // Default input unit
-        units: ["Celsius", "Fahrenheit", "Kelvin"]
+        inputUnit: "Celsius" // Default input unit
     };
-    this.addWidget("combo", "Input Unit", "Celsius", function(v) {
+    
+    // ✅ Fixed combo widget with proper binding
+    this.addWidget("combo", "Input Unit", this.properties.inputUnit, function(v) {
         this.properties.inputUnit = v;
-    }, { values: this.properties.units });
+        this.setDirtyCanvas(true, true);
+    }.bind(this), { values: ["Celsius", "Fahrenheit", "Kelvin"] });
+    
     this.title = "Temp Converter";
     this.color = "#FF5722";
     this.bgcolor = "#E64A19";
     this.size = [220, 160];
-    this.pos = [100, 400];
+    this.resizable = true; // ✅ Allow manual resizing
 }
 
 TemperatureConverterNode.prototype.onExecute = function() {
@@ -45,6 +50,10 @@ TemperatureConverterNode.prototype.onExecute = function() {
             fahrenheit = (temp - 273.15) * 9/5 + 32;
             kelvin = temp;
             break;
+        default:
+            celsius = temp;
+            fahrenheit = (temp * 9/5) + 32;
+            kelvin = temp + 273.15;
     }
 
     this.setOutputData(0, celsius);
@@ -54,6 +63,7 @@ TemperatureConverterNode.prototype.onExecute = function() {
 
 TemperatureConverterNode.prototype.onDrawForeground = function(ctx, graphcanvas) {
     if (this.flags.collapsed) return;
+    
     const padding = this.properties.padding;
     ctx.save();
     ctx.translate(padding, padding);
@@ -62,19 +72,31 @@ TemperatureConverterNode.prototype.onDrawForeground = function(ctx, graphcanvas)
     var celsius = this.getOutputData(0) || 0;
     var fahrenheit = this.getOutputData(1) || 0;
     var kelvin = this.getOutputData(2) || 0;
+    
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "14px Arial";
-    ctx.fillText(`Input: ${temp} ${this.properties.inputUnit}`, 5, 20);
-    ctx.fillText(`Celsius: ${celsius.toFixed(2)} °C`, 5, 40);
-    ctx.fillText(`Fahrenheit: ${fahrenheit.toFixed(2)} °F`, 5, 60);
-    ctx.fillText(`Kelvin: ${kelvin.toFixed(2)} K`, 5, 80);
+    ctx.font = "12px Arial";
+    ctx.fillText(`Input: ${temp} ${this.properties.inputUnit}`, 5, 15);
+    ctx.fillText(`Celsius: ${celsius.toFixed(2)} °C`, 5, 30);
+    ctx.fillText(`Fahrenheit: ${fahrenheit.toFixed(2)} °F`, 5, 45);
+    ctx.fillText(`Kelvin: ${kelvin.toFixed(2)} K`, 5, 60);
 
     ctx.restore();
-    this.size = [
-        LiteGraph.NODE_WIDTH + 2 * padding,
-        this.computeSize()[1] + 2 * padding
-    ];
-    this.setDirtyCanvas(true, true);
+    
+    // ✅ Only resize if necessary
+    var minWidth = 220;
+    var minHeight = 160;
+    if (this.size[0] < minWidth || this.size[1] < minHeight) {
+        this.size = [Math.max(this.size[0], minWidth), Math.max(this.size[1], minHeight)];
+        this.setDirtyCanvas(true, true);
+    }
+};
+
+// ✅ Make node resizable
+TemperatureConverterNode.prototype.onResize = function(size) {
+    var minWidth = 220;
+    var minHeight = 160;
+    this.size[0] = Math.max(size[0], minWidth);
+    this.size[1] = Math.max(size[1], minHeight);
 };
 
 LiteGraph.registerNodeType("thermo/temp_converter", TemperatureConverterNode);

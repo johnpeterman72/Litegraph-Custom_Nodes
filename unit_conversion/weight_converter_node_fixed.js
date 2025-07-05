@@ -1,61 +1,61 @@
 // Metadata
 // Author: https://github.com/johnpeterman72
 // Version: 1.1 - Fixed combo widget and sizing issues
-// Description: A node that converts imperial volume units (fl oz, gal, cu ft) to metric (L).
+// Description: A node that converts imperial weight units (oz, lb) to metric (kg).
 // Created: July 04, 2025, 12:48 PM CST
 // Fixed: January 6, 2025
 
-function VolumeConverterNode() {
-    this.addInput("Volume", "number");
-    this.addOutput("Liters", "number");
+function WeightConverterNode() {
+    this.addInput("Weight", "number");
+    this.addOutput("Kilograms", "number");
     
     this.properties = {
         padding: 10,
-        inputUnit: "fl oz"
+        inputUnit: "ounces"
     };
     
     // ✅ Fixed combo widget with proper binding
     this.addWidget("combo", "Input Unit", this.properties.inputUnit, function(v) {
         this.properties.inputUnit = v;
         this.setDirtyCanvas(true, true);
-    }.bind(this), { values: ["fl oz", "gallons", "cu feet", "cu inches"] });
+    }.bind(this), { values: ["ounces", "pounds", "stones", "tons"] });
     
-    this.title = "Volume Converter";
-    this.color = "#00BCD4";
-    this.bgcolor = "#0097A7";
+    this.title = "Weight Converter";
+    this.color = "#FF9800";
+    this.bgcolor = "#F57C00";
     this.size = [200, 120];
     this.resizable = true; // ✅ Allow manual resizing
 }
 
-VolumeConverterNode.prototype.onExecute = function() {
-    var volume = this.getInputData(0) || 0;
+WeightConverterNode.prototype.onExecute = function() {
+    var weight = this.getInputData(0) || 0;
     var factor = 1;
     
     switch (this.properties.inputUnit) {
-        case "fl oz": factor = 0.0295735; break;
-        case "gallons": factor = 3.78541; break;
-        case "cu feet": factor = 28.3168; break;
-        case "cu inches": factor = 0.0163871; break;
+        case "ounces": factor = 0.0283495; break; // oz to kg
+        case "pounds": factor = 0.453592; break; // lb to kg
+        case "stones": factor = 6.35029; break; // stones to kg
+        case "tons": factor = 907.185; break; // short tons to kg
         default: factor = 1;
     }
     
-    this.setOutputData(0, volume * factor);
+    this.setOutputData(0, weight * factor);
 };
 
-VolumeConverterNode.prototype.onDrawForeground = function(ctx, graphcanvas) {
+WeightConverterNode.prototype.onDrawForeground = function(ctx, graphcanvas) {
     if (this.flags.collapsed) return;
     
     const padding = this.properties.padding;
     ctx.save();
     ctx.translate(padding, padding);
 
-    var volume = this.getInputData(0) || 0;
-    var liters = this.getOutputData(0) || 0;
+    var weight = this.getInputData(0) || 0;
+    var kilograms = this.getOutputData(0) || 0;
     
     ctx.fillStyle = "#FFFFFF";
     ctx.font = "12px Arial";
-    ctx.fillText(`Input: ${volume} ${this.properties.inputUnit}`, 5, 15);
-    ctx.fillText(`Liters: ${liters.toFixed(4)} L`, 5, 30);
+    ctx.fillText(`Input: ${weight} ${this.properties.inputUnit}`, 5, 15);
+    ctx.fillText(`Kilograms: ${kilograms.toFixed(4)} kg`, 5, 30);
 
     ctx.restore();
     
@@ -69,11 +69,11 @@ VolumeConverterNode.prototype.onDrawForeground = function(ctx, graphcanvas) {
 };
 
 // ✅ Make node resizable
-VolumeConverterNode.prototype.onResize = function(size) {
+WeightConverterNode.prototype.onResize = function(size) {
     var minWidth = 200;
     var minHeight = 120;
     this.size[0] = Math.max(size[0], minWidth);
     this.size[1] = Math.max(size[1], minHeight);
 };
 
-LiteGraph.registerNodeType("convert/volume", VolumeConverterNode);
+LiteGraph.registerNodeType("convert/weight", WeightConverterNode);
