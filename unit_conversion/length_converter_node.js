@@ -8,17 +8,23 @@ function LengthConverterNode() {
     this.addInput("Length", "number");
     this.addOutput("Meters", "number");
     this.properties = {
-        padding: 10,
+        padding: 150,
         inputUnit: "inches",
         units: ["inches", "feet", "yards", "miles"]
     };
-    this.addWidget("combo", "Input Unit", "inches", function(v) {
-        this.properties.inputUnit = v;
-    }, { values: this.properties.units });
+    this.addWidget(
+        "combo",
+        "Input Unit",
+        this.properties.inputUnit, // Initial value
+        (value) => {
+            this.properties.inputUnit = value;
+            this.setDirtyCanvas(true, true); // Trigger canvas redraw
+            this.graph.setDirtyCanvas(true); // Ensure graph execution
+        },
+        { values: this.properties.units }
+    );
     this.title = "Length Converter";
-    this.color = "#4CAF50";
-    this.bgcolor = "#2E7D32";
-    this.size = [200, 120];
+    this.size = [500, 500];
     this.pos = [100, 500];
 }
 
@@ -41,14 +47,20 @@ LengthConverterNode.prototype.onDrawForeground = function(ctx, graphcanvas) {
     ctx.translate(padding, padding);
 
     var length = this.getInputData(0) || 0;
-    var meters = this.getOutputData(0) || 0;
-    ctx.fillStyle = "#FFFFFF";
+    var meters = length; // Default value
+    switch (this.properties.inputUnit) {
+        case "inches": meters = length * 0.0254; break;
+        case "feet": meters = length * 0.3048; break;
+        case "yards": meters = length * 0.9144; break;
+        case "miles": meters = length * 1609.344; break;
+    }
     ctx.font = "14px Arial";
     ctx.fillText(`Input: ${length} ${this.properties.inputUnit}`, 5, 20);
     ctx.fillText(`Meters: ${meters.toFixed(2)} m`, 5, 40);
 
     ctx.restore();
-    this.size = [LiteGraph.NODE_WIDTH + 2 * padding, this.computeSize()[1] + 2 * padding];
+    // Adjust size dynamically; assuming default node height if computeSize is unavailable
+    this.size = [LiteGraph.NODE_WIDTH + 2 * padding, 100 + 2 * padding];
     this.setDirtyCanvas(true, true);
 };
 
